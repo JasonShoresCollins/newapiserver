@@ -79,7 +79,7 @@ var corsOptionsDelegate = function (req, callback) {
     logWithTimestamp("CORS request denied.");
     corsOptions = { origin: false };
   }
-  
+
   callback(null, corsOptions);
 };
 
