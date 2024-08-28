@@ -117,13 +117,14 @@ app.post("/workrequest/:id", cors(corsOptionsDelegate), (req, res) => {
   // Invoke the Lambdas immediately after acknowledgement
   logWithTimestamp("Invoking Lambdas immediately...");
 
-  // Invoke the NetSuite Lambda function
-  logWithTimestamp("Invoking NetSuite Lambda...");
-  invokeLambda('collinsAPI_sendtoNS', { body: jsonbody });
+ // Invoke the NetSuite Lambda function
+logWithTimestamp("Invoking NetSuite Lambda...");
+invokeLambda('collinsAPI_sendtoNS', jsonbody); // Directly passing jsonbody
 
-  // Invoke the Logging/Acumatica Lambda function
-  logWithTimestamp("Invoking Acumatica Lambda...");
-  invokeLambda('collinsAPI_sendtoACU', { body: jsonbody });
+// Invoke the Logging/Acumatica Lambda function
+logWithTimestamp("Invoking Acumatica Lambda...");
+invokeLambda('collinsAPI_sendtoACU', jsonbody); // Directly passing jsonbody
+
 });
 
 app.get("/workrequest/:id", cors(corsOptionsDelegate), (req, res) => {
