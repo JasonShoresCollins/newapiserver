@@ -10,15 +10,18 @@ const PORT = 8080;
 
 // AWS Lambda configuration
 const lambda = new AWS.Lambda({
-  region: "us-east-2" 
+  region: "us-east-2"
 });
 
 // JSON parsing
 app.use(express.json());
 app.use(cors());
 
+console.log("Server initialization started.");
+
 // 200 response
 app.get("/APITEST", (req, res) => {
+  console.log("GET /APITEST called");
   res.status(200).send({
     teststatus: "good",
     testmessage: "Welcome to the Collins API server",
@@ -26,6 +29,7 @@ app.get("/APITEST", (req, res) => {
 });
 
 app.get("/", (req, res) => {
+  console.log("GET / called");
   res.status(200).send({
     teststatus: "good",
     testmessage: "Welcome to the Collins API server",
@@ -72,11 +76,16 @@ var whitelist = [
   "https://tse.collins-cs.com",
 ];
 
+console.log("CORS whitelist configured:", whitelist);
+
 var corsOptionsDelegate = function (req, callback) {
   var corsOptions;
+  console.log("CORS request received from:", req.header("Origin"));
   if (whitelist.indexOf(req.header("Origin")) !== -1) {
+    console.log("CORS request allowed.");
     corsOptions = { origin: true }; // reflect (enable) the requested origin in the CORS response
   } else {
+    console.log("CORS request denied.");
     corsOptions = { origin: false }; // disable CORS for this request
   }
   callback(null, corsOptions); // callback expects two parameters: error and options
@@ -86,6 +95,7 @@ var pause = 60000;
 
 // Function to invoke a Lambda function
 function invokeLambda(lambdaFunctionName, payload) {
+  console.log(`Invoking Lambda function: ${lambdaFunctionName} with payload:`, payload);
   const params = {
     FunctionName: lambdaFunctionName,
     Payload: JSON.stringify(payload)
@@ -104,12 +114,16 @@ function invokeLambda(lambdaFunctionName, payload) {
 // Capture and post
 app.post("/workrequest/:id", cors(corsOptionsDelegate), (req, res) => {
   const { id } = req.params;
-  var jsonbody = req.body; // No need to stringify for Lambda, leaving as object
+  var jsonbody = req.body;
+
+  console.log("POST /workrequest/:id called with ID:", id);
+  console.log("Request body:", jsonbody);
 
   // Acknowledgement sent
   res.send({
     workrequest: `WO received.`,
   });
+  console.log("Acknowledgement sent to client.");
 
   // Apply delay logic before sending to Lambdas
   if (pause <= 120000) {
@@ -117,8 +131,11 @@ app.post("/workrequest/:id", cors(corsOptionsDelegate), (req, res) => {
   } else {
     pause = 60000;
   }
+  console.log(`Applying delay of ${pause + 30000} ms before invoking Lambdas.`);
 
   setTimeout(() => {
+    console.log("Invoking Lambdas after delay...");
+
     // Invoke the NetSuite Lambda function
     invokeLambda('collinsAPI_sendtoNS', { body: jsonbody });
 
@@ -132,13 +149,17 @@ app.get("/workrequest/:id", cors(corsOptionsDelegate), (req, res) => {
   const { id } = req.params;
   var jsonbody = req.body;
 
+  console.log("GET /workrequest/:id called with ID:", id);
+  console.log("Request body:", jsonbody);
+
   // Acknowledgement sent
   res.send({
     workrequest: `WO received.`,
   });
+  console.log("Acknowledgement sent to client.");
 });
 
 // Listener
-app.listen(PORT, () =>
-  console.log(`Server version 0.01 on http://localhost:${PORT}`)
-);
+app.listen(PORT, () => {
+  console.log(`Server version 0.01 running on http://localhost:${PORT}`);
+});
