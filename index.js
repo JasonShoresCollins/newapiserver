@@ -49,7 +49,6 @@ app.get("/", (req, res) => {
 // Whitelist for CORS
 var whitelist = [
   `http://localhost:${PORT}`,
-  `http://127.0.0.1:${PORT}`, // Include for local requests
   "api.target.com/work_orders/v1",
   "https://stage-api.target.com/visitors/v1/visits",
   "https://api.target.com/visitors/v1/visits",
@@ -87,7 +86,6 @@ var whitelist = [
   "https://tse.collins-cs.com",
 ];
 
-
 logWithTimestamp("CORS whitelist configured:", whitelist);
 
 var corsOptionsDelegate = function (req, callback) {
@@ -96,23 +94,22 @@ var corsOptionsDelegate = function (req, callback) {
   logWithTimestamp("CORS request received from:", origin);
 
   if (!origin) {
-    // Handle requests without an Origin header
     logWithTimestamp("CORS request without Origin header, allowing request.");
-    corsOptions = { origin: true }; // Allow requests with no origin (e.g., server-to-server)
+    corsOptions = { origin: true };
   } else if (whitelist.indexOf(origin) !== -1) {
     logWithTimestamp("CORS request allowed.");
-    corsOptions = { origin: true }; // Allow requests from whitelisted origins
+    corsOptions = { origin: true };
   } else {
     logWithTimestamp("CORS request denied.");
-    corsOptions = { origin: false }; // Deny requests from other origins
+    corsOptions = { origin: false };
   }
   
-  callback(null, corsOptions); // callback expects two parameters: error and options
+  callback(null, corsOptions);
 };
 
 // Function to invoke a Lambda function
 function invokeLambda(lambdaFunctionName, payload) {
-  logWithTimestamp(`Invoking Lambda function: ${lambdaFunctionName} with payload:`, payload);
+  logWithTimestamp(`Attempting to invoke Lambda function: ${lambdaFunctionName} with payload:`, payload);
   const params = {
     FunctionName: lambdaFunctionName,
     Payload: JSON.stringify(payload)
@@ -121,7 +118,7 @@ function invokeLambda(lambdaFunctionName, payload) {
   return lambda.invoke(params).promise()
     .then(data => {
       logWithTimestamp(`Lambda ${lambdaFunctionName} invoked successfully.`);
-      logWithTimestamp("Response:", data);
+      logWithTimestamp("Response from Lambda:", data);
     })
     .catch(err => {
       logWithTimestamp(`Error invoking Lambda ${lambdaFunctionName}:`, err);
@@ -142,13 +139,15 @@ app.post("/workrequest/:id", cors(corsOptionsDelegate), (req, res) => {
   });
   logWithTimestamp("Acknowledgement sent to client.");
 
-  // Immediately invoke the Lambdas (without delay)
+  // Invoke the Lambdas immediately after acknowledgement
   logWithTimestamp("Invoking Lambdas immediately...");
-
+  
   // Invoke the NetSuite Lambda function
+  logWithTimestamp("Invoking NetSuite Lambda...");
   invokeLambda('collinsAPI_sendtoNS', { body: jsonbody });
 
   // Invoke the Logging/Acumatica Lambda function
+  logWithTimestamp("Invoking Acumatica Lambda...");
   invokeLambda('collinsAPI_sendtoACU', { body: jsonbody });
 });
 
