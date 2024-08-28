@@ -23,6 +23,14 @@ function logWithTimestamp(message, data = null) {
   }
 }
 
+// Function to flatten nested JSON (e.g., location fields)
+function flattenPayload(payload) {
+  return {
+    ...payload,
+    ...payload.location,  // Flatten the location fields to the top level
+  };
+}
+
 // JSON parsing
 app.use(express.json());
 app.use(cors());
@@ -53,7 +61,6 @@ var whitelist = [
   "api.target.com/work_orders/v1",
   "https://stage-api.target.com/visitors/v1/visits",
   "https://api.target.com/visitors/v1/visits",
-  // ... other entries in your whitelist
   "https://ec2-3-144-25-50.us-east-2.compute.amazonaws.com",
   "https://ec2-3-23-194-47.us-east-2.compute.amazonaws.com",
   "http://ec2-3-144-25-50.us-east-2.compute.amazonaws.com",
@@ -109,6 +116,9 @@ app.post("/workrequest/:id", cors(corsOptionsDelegate), (req, res) => {
   logWithTimestamp("POST /workrequest/:id called with ID:", id);
   logWithTimestamp("Request body:", jsonbody);
 
+  // Flatten the payload
+  const flatPayload = flattenPayload(jsonbody);
+
   // Acknowledgement sent
   res.send({
     workrequest: `WO received.`,
@@ -117,10 +127,10 @@ app.post("/workrequest/:id", cors(corsOptionsDelegate), (req, res) => {
 
   // Invoke the Lambdas immediately after acknowledgement
   logWithTimestamp("Invoking Lambdas immediately...");
-  
+
   // Invoke the NetSuite Lambda function
   logWithTimestamp("Invoking NetSuite Lambda...");
-  invokeLambda('collinsAPI_sendtoNS', { body: jsonbody });
+  invokeLambda('collinsAPI_sendtoNS', { body: flatPayload });
 
   // Invoke the Logging/Acumatica Lambda function
   logWithTimestamp("Invoking Acumatica Lambda...");
