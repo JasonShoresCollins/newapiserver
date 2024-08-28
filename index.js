@@ -23,14 +23,6 @@ function logWithTimestamp(message, data = null) {
   }
 }
 
-// Function to flatten nested JSON (e.g., location fields)
-function flattenPayload(payload) {
-  return {
-    ...payload,
-    ...payload.location,  // Flatten the location fields to the top level
-  };
-}
-
 // JSON parsing
 app.use(express.json());
 app.use(cors());
@@ -114,10 +106,7 @@ app.post("/workrequest/:id", cors(corsOptionsDelegate), (req, res) => {
   var jsonbody = req.body;
 
   logWithTimestamp("POST /workrequest/:id called with ID:", id);
-  logWithTimestamp("Request body:", jsonbody);
-
-  // Flatten the payload
-  const flatPayload = flattenPayload(jsonbody);
+  logWithTimestamp("Request body before sending to Lambda:", jsonbody);
 
   // Acknowledgement sent
   res.send({
@@ -130,7 +119,7 @@ app.post("/workrequest/:id", cors(corsOptionsDelegate), (req, res) => {
 
   // Invoke the NetSuite Lambda function
   logWithTimestamp("Invoking NetSuite Lambda...");
-  invokeLambda('collinsAPI_sendtoNS', { body: flatPayload });
+  invokeLambda('collinsAPI_sendtoNS', { body: jsonbody });
 
   // Invoke the Logging/Acumatica Lambda function
   logWithTimestamp("Invoking Acumatica Lambda...");
