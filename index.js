@@ -156,8 +156,8 @@ app.post("/workrequest/:id", cors(corsOptionsDelegate), (req, res) => {
     logWithTimestamp("Invoking Lambdas after delay...");
 
     // Invoke the NetSuite Lambda function
-    logWithTimestamp("Invoking NetSuite Lambda...");
-    invokeLambda('collinsAPI_sendtoNS', jsonbody);
+    // logWithTimestamp("Invoking NetSuite Lambda...");
+    // invokeLambda('collinsAPI_sendtoNS', jsonbody);
 
     // Invoke the Logging/Acumatica Lambda function
     logWithTimestamp("Invoking Acumatica Lambda...");
